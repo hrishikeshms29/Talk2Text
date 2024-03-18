@@ -78,7 +78,6 @@ class MainActivity : ComponentActivity() {
                 secondary = Teal200
             )
         } else {
-
             lightColors(
                 primary = Purple500,
                 primaryVariant = Purple700,
@@ -91,9 +90,20 @@ class MainActivity : ComponentActivity() {
             typography = Typography1,
             shapes = Shapes1
         ) {
-            Surface(color = MaterialTheme.colors.background) {
+            Scaffold(
+//                topBar = {
+//                    TopAppBar(
+//                        title = { Text("Speech to Text Analyzer") },
+//                        backgroundColor = MaterialTheme.colors.primary,
+//                        contentColor = MaterialTheme.colors.onPrimary
+//                    )
+//                }
+            ) { paddingValues ->
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -138,6 +148,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 
 
 //    private fun startListening() {
