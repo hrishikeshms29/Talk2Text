@@ -12,6 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.learningkotlinn4.ui.theme.*
 
 class MainActivity : ComponentActivity() {
     private lateinit var startForResult: ActivityResultLauncher<Intent>
@@ -67,10 +69,31 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun SpeechToTextApp() {
         val context = LocalContext.current
-        MaterialTheme {
+        val isSystemInDarkTheme = isSystemInDarkTheme()
+
+        val colors = if (isSystemInDarkTheme) {
+            darkColors(
+                primary = Purple200,
+                primaryVariant = Purple700,
+                secondary = Teal200
+            )
+        } else {
+
+            lightColors(
+                primary = Purple500,
+                primaryVariant = Purple700,
+                secondary = Teal200
+            )
+        }
+
+        MaterialTheme(
+            colors = colors,
+            typography = Typography1,
+            shapes = Shapes1
+        ) {
             Surface(color = MaterialTheme.colors.background) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -78,7 +101,7 @@ class MainActivity : ComponentActivity() {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "App Logo",
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(100.dp).padding(bottom = 16.dp)
                     )
                     FloatingActionButton(
                         onClick = {
@@ -92,26 +115,30 @@ class MainActivity : ComponentActivity() {
                             }
                             startForResult.launch(intent)
                         },
-                        backgroundColor = MaterialTheme.colors.primary
+                        backgroundColor = MaterialTheme.colors.primary,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     ) {
                         Icon(Icons.Rounded.Mic, contentDescription = "Microphone", tint = Color.White)
                     }
                     // Display recognized text in a Card for an elegant look
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        elevation = 4.dp
+                        elevation = 4.dp,
+                        backgroundColor = MaterialTheme.colors.surface,
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Text(text = speakText, style = MaterialTheme.typography.h6, modifier = Modifier.padding(16.dp))
                     }
                     docxFile?.let {
-                        Text("Word document saved: ${it.absolutePath}", style = MaterialTheme.typography.body1)
+                        Text("Word document saved: ${it.absolutePath}", style = MaterialTheme.typography.body1, modifier = Modifier.padding(top = 16.dp))
                     }
                     // Copyright Symbol
-                    Text("© 2024 by Hrishikesh", style = MaterialTheme.typography.caption)
+                    Text("© 2024 by Hrishikesh", style = MaterialTheme.typography.caption, modifier = Modifier.padding(top = 16.dp))
                 }
             }
         }
     }
+
 
     private fun startListening() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
