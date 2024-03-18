@@ -1,8 +1,8 @@
 package com.example.learningkotlinn4
 
-import android.Manifest
+//import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
+//import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.speech.RecognizerIntent
@@ -23,9 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+//import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+//import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -140,17 +140,17 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun startListening() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
-        }
-        startForResult.launch(intent)
-    }
+//    private fun startListening() {
+//        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+//            putExtra(
+//                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+//                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+//            )
+//            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+//            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
+//        }
+//        startForResult.launch(intent)
+//    }
 
     private fun saveToTxt(text: String) {
         GlobalScope.launch(Dispatchers.IO) {
