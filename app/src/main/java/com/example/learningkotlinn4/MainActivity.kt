@@ -1,3 +1,169 @@
+package com.example.learningkotlinn4
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.os.Environment
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
+
+class MainActivity : ComponentActivity() {
+    private lateinit var startForResult: ActivityResultLauncher<Intent>
+    private var speakText by mutableStateOf("")
+    private var docxFile: File? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                val resultData = result.data
+                val resultArray = resultData?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+
+                speakText = resultArray?.get(0).toString()
+
+                // Save to TXT when text is recognized
+                saveToTxt(speakText)
+            }
+        }
+
+        setContent {
+            Surface(
+                color = MaterialTheme.colors.background,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                SpeechToTextApp()
+            }
+        }
+    }
+
+
+    @Composable
+    fun SpeechToTextApp() {
+        val context = LocalContext.current
+        MaterialTheme {
+            Surface(color = MaterialTheme.colors.background) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Logo
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "App Logo",
+                        modifier = Modifier.size(100.dp)
+                    )
+                    FloatingActionButton(
+                        onClick = {
+                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(
+                                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                                )
+                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
+                            }
+                            startForResult.launch(intent)
+                        },
+                        backgroundColor = MaterialTheme.colors.primary
+                    ) {
+                        Icon(Icons.Rounded.Mic, contentDescription = "Microphone", tint = Color.White)
+                    }
+                    // Display recognized text in a Card for an elegant look
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        elevation = 4.dp
+                    ) {
+                        Text(text = speakText, style = MaterialTheme.typography.h6, modifier = Modifier.padding(16.dp))
+                    }
+                    docxFile?.let {
+                        Text("Word document saved: ${it.absolutePath}", style = MaterialTheme.typography.body1)
+                    }
+                    // Copyright Symbol
+                    Text("© 2024 by Hrishikesh", style = MaterialTheme.typography.caption)
+                }
+            }
+        }
+    }
+
+    private fun startListening() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
+        }
+        startForResult.launch(intent)
+    }
+
+    private fun saveToTxt(text: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+            documentsDir.mkdirs()
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val filename = "recognized_text_$timestamp.txt"
+            val txtFile = File(documentsDir, filename)
+            txtFile.writeText(text)
+            launch(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "Text saved to ${txtFile.absolutePath}", Toast.LENGTH_SHORT).show()
+                // Convert the text file to Word document (DOCX)
+                convertToDocx(txtFile)
+            }
+        }
+    }
+
+    private fun convertToDocx(txtFile: File) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val filename = "recognized_text_$timestamp.docx"
+                val docxFile = File(txtFile.parent, filename)
+
+                // Write the text content to the Word document
+                FileOutputStream(docxFile).use { output ->
+                    output.write(txtFile.readBytes())
+                }
+
+                launch(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Text file copied to Word document: ${docxFile.absolutePath}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Error copying text file to Word document: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+}
 //package com.example.learningkotlinn4
 //
 //import android.content.Intent
@@ -305,7 +471,7 @@
 //
 //}
 //docx
-package com.example.learningkotlinn4
+
 //
 //import android.Manifest
 //import android.content.Intent
@@ -750,165 +916,3 @@ package com.example.learningkotlinn4
 //}
 
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Bundle
-import android.os.Environment
-import android.speech.RecognizerIntent
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.*
-
-class MainActivity : ComponentActivity() {
-    private lateinit var startForResult: ActivityResultLauncher<Intent>
-    private var speakText by mutableStateOf("")
-    private var docxFile: File? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                val resultData = result.data
-                val resultArray = resultData?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-
-                speakText = resultArray?.get(0).toString()
-
-                // Save to TXT when text is recognized
-                saveToTxt(speakText)
-            }
-        }
-
-        setContent {
-            Surface(
-                color = MaterialTheme.colors.background,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                SpeechToTextApp()
-            }
-        }
-    }
-
-
-    @Composable
-    fun SpeechToTextApp() {
-        val context = LocalContext.current
-        MaterialTheme {
-            Surface(color = MaterialTheme.colors.background) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Logo
-//                    Image(
-//                        painter = painterResource(id = R.drawable.logo),
-//                        contentDescription = "App Logo",
-//                        modifier = Modifier.size(100.dp)
-//                    )
-                    FloatingActionButton(
-                        onClick = {
-                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                putExtra(
-                                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                                )
-                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
-                            }
-                            startForResult.launch(intent)
-                        },
-                        backgroundColor = MaterialTheme.colors.primary
-                    ) {
-                        Icon(Icons.Rounded.Mic, contentDescription = "Microphone", tint = Color.White)
-                    }
-                    // Display recognized text in a Card for an elegant look
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        elevation = 4.dp
-                    ) {
-                        Text(text = speakText, style = MaterialTheme.typography.h6, modifier = Modifier.padding(16.dp))
-                    }
-                    docxFile?.let {
-                        Text("Word document saved: ${it.absolutePath}", style = MaterialTheme.typography.body1)
-                    }
-                    // Copyright Symbol
-                    Text("© 2024 by Hrishikesh", style = MaterialTheme.typography.caption)
-                }
-            }
-        }
-    }
-
-    private fun startListening() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now")
-        }
-        startForResult.launch(intent)
-    }
-
-    private fun saveToTxt(text: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-            documentsDir.mkdirs()
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val filename = "recognized_text_$timestamp.txt"
-            val txtFile = File(documentsDir, filename)
-            txtFile.writeText(text)
-            launch(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "Text saved to ${txtFile.absolutePath}", Toast.LENGTH_SHORT).show()
-                // Convert the text file to Word document (DOCX)
-                convertToDocx(txtFile)
-            }
-        }
-    }
-
-    private fun convertToDocx(txtFile: File) {
-        GlobalScope.launch(Dispatchers.IO) {
-            try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val filename = "recognized_text_$timestamp.docx"
-                val docxFile = File(txtFile.parent, filename)
-
-                // Write the text content to the Word document
-                FileOutputStream(docxFile).use { output ->
-                    output.write(txtFile.readBytes())
-                }
-
-                launch(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Text file copied to Word document: ${docxFile.absolutePath}", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                launch(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Error copying text file to Word document: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-}
